@@ -9,32 +9,44 @@ const Counter = {
     };
   },
   methods: {
-    creaneContact() {
+    async creaneContact() {
       const { ...contact } = this.form;
-      [].length;
+
       this.contacts.push({ ...contact, id: Date.now() });
+      await request("/api/contacts", "POST", contact);
 
-      this.form.value = this.form.name = "";
+      this.form.value = "";
+      this.form.name = "";
     },
 
-    markContact(id) {
-      const contact = this.contacts.find((c) => c.id === id);
-      contact.marked = true;
+    async removeContact(id) {
+      await request(`/api/contacts/${id}`, "delete");
+      this.contacts = this.contacts.filter((element) => element.id !== id);
     },
-    removeContact(id) {
-      this.contacts = this.contacts.filter((c) => c.id !== id);
-    },
+  },
+
+  async mounted() {
+    this.contacts = await request("/api/contacts");
   },
 };
 
-function request(url, method = "GET") {
+async function request(url, method = "GET", data = null) {
   try {
-    const headers = "";
+    const headers = {};
+    let body;
 
-    fetch(url, {
+    if (data) {
+      headers["Content-Type"] = "appLication/json";
+      body = JSON.stringify(data);
+    }
+
+    const response = await fetch(url, {
       method,
+      headers,
+      body,
     });
-    
+
+    return await response.json();
   } catch (e) {
     console.warn("Error", e.message);
   }
